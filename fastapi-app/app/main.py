@@ -54,10 +54,10 @@ class ItemCreate(BaseModel):
     def validate_price(cls, v: float):
         if v < 0:
             raise ValueError("Price must be ≥ 0")
-        # Validar máximo 2 decimales
+
         decimal_value = Decimal(str(v))
-        if decimal_value.as_tuple().exponent < -2:  # Más de 2 decimales
-            # Redondear a 2 decimales
+        if decimal_value.as_tuple().exponent < -2:
+
             decimal_value = decimal_value.quantize(
                 Decimal('0.01'), rounding=ROUND_HALF_UP)
         return float(decimal_value)
@@ -82,10 +82,10 @@ class ItemUpdate(BaseModel):
         if v is not None:
             if v < 0:
                 raise ValueError("Price must be ≥ 0")
-            # Validar máximo 2 decimales
+
             decimal_value = Decimal(str(v))
-            if decimal_value.as_tuple().exponent < -2:  # Más de 2 decimales
-                # Redondear a 2 decimales
+            if decimal_value.as_tuple().exponent < -2:
+
                 decimal_value = decimal_value.quantize(
                     Decimal('0.01'), rounding=ROUND_HALF_UP)
             return float(decimal_value)
@@ -214,9 +214,6 @@ def get_item(item_id: str, include_deleted: bool = Query(False, description="Inc
 @app.post("/api/menu", response_model=Item, status_code=201)
 def create_item(payload: ItemCreate, token: str = Depends(get_current_token)):
     constraint = find_item_name(payload.name)
-    # if payload.price <= 0:
-    #    raise HTTPException(
-    #        status_code=400, detail="Price must be greater than 0")
 
     if constraint:
         raise HTTPException(status_code=409, detail="Name not unique")
@@ -247,10 +244,6 @@ def update_item(item_id: str, payload: ItemUpdate, token: str = Depends(get_curr
         raise HTTPException(status_code=400, detail="Item is deleted")
 
     data = payload.model_dump(exclude_unset=True)
-
-    # if "price" in data and data["price"] <= 0:
-    #    raise HTTPException(
-    #        status_code=400, detail="Price must be greater than 0")
 
     for k, v in data.items():
         setattr(item, k, v)
