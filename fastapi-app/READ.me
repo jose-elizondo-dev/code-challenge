@@ -13,3 +13,146 @@ then in a new terminal under my-app folder run this:
 .env = private token, included only for the code challenge demonstration purposes (it should never be included in real projects)
 
 Endpoints and ports may differ slightly from the examples, but the same functionality and constraints are fully implemented.
+
+
+Features
+    Backend (FastAPI)
+        RESTful API with CRUD operations
+
+        Bearer token authentication for protected endpoints
+
+        Advanced filtering, sorting, and pagination
+
+        Soft delete with item recovery capability
+
+        Input validation with Pydantic models
+
+        CORS enabled for frontend communication
+
+        Comprehensive error handling
+
+    Frontend (React)
+        Responsive UI with modern React patterns
+
+        Menu listing with search, filters, and sorting
+
+        Create, update, and delete operations
+
+        Form validation and error feedback
+
+        Loading states and user feedback
+
+        Client-side routing with React Router
+
+Architecture Decisions
+    Backend Framework: FastAPI
+        Why: Fast development, automatic OpenAPI documentation, excellent performance
+
+        Benefits: Async support, type hints, dependency injection system
+
+        Trade-off: Less mature ecosystem than Django, but perfect for API-focused applications
+
+Backend Framework: FastAPI
+    Why: Fast development, automatic OpenAPI documentation, excellent performance
+
+    Benefits: Async support, type hints, dependency injection system
+
+    Trade-off: Less mature ecosystem than Django, but perfect for API-focused applications
+
+Frontend: React with Vite
+    Why: Industry standard, excellent component model, rich ecosystem
+
+    Benefits: Fast development with hot reload, efficient bundling
+
+    Trade-off: Larger bundle size than alternatives, but optimal for interactive UIs
+
+Data Store: In-Memory Storage
+    Why: Simplicity for MVP, no external dependencies
+
+    Benefits: Zero configuration, perfect for demonstration
+
+    Trade-off: Data persistence only during runtime, not suitable for production
+
+    Alternative considered: SQLite (would require migrations and connection management)
+
+
+Assumptions & Trade-offs
+
+    Assumptions Made
+
+        Single user system: The application assumes a single staff user managing the menu
+
+        Low traffic: In-memory storage assumes low concurrent access
+
+        Simple authentication: Single token authentication suffices for MVP
+
+        Menu size: Pagination with 100 items max per page is sufficient
+
+        No concurrent modifications: No locking mechanism for data consistency
+
+    Design Trade-offs
+        In-memory vs Database: Chose simplicity over persistence for faster development
+
+        Monolithic vs Microservices: Single backend service for simplicity
+
+        Client-side vs Server-side filtering: Server-side for consistency with large datasets
+
+        Soft vs Hard delete: Soft delete to preserve data integrity
+
+        Minimal vs Comprehensive validation: Basic validation for MVP, extensible for production
+
+
+Known Limitations
+    Data Persistence: All data is lost on server restart
+
+    Scalability: In-memory storage doesn't scale beyond single instance
+
+    Concurrency: No locking mechanism for concurrent modifications
+
+    Security: Basic token authentication, no user management
+
+    Error Handling: Basic error responses, could be more descriptive
+
+    Validation: Price rounding may have floating-point precision issues
+
+
+Next Steps & Improvements
+    High Priority
+        Persistent storage: Migrate to SQLite or PostgreSQL with Alembic migrations
+
+        Enhanced authentication: Implement proper user accounts with roles
+
+        Data seeding: Add initial menu items for better demo experience
+
+        Input sanitization: Prevent potential injection attacks
+
+    Medium Priority
+        API versioning: Version endpoints for backward compatibility
+
+        Request logging: Add structured logging for debugging
+
+        Rate limiting: Prevent abuse of public endpoints
+
+    Low Priority
+        Dockerization: Containerize both services for easy deployment
+
+        CI/CD pipeline: Automated testing and deployment
+
+        Monitoring: Health checks and metrics collection
+
+
+How to run it, under fastapi-app folder run this:
+
+    -python -m venv venv
+    -the source (Windows) -> venv\Scripts\activate
+    -pip install -r requirements.txt
+    -python -m uvicorn app.main:app --reload
+
+Then open a new terminal under my-app folder run this:
+
+    -npm install
+    -npm run dev
+
+.env = private token, included only for the code challenge demonstration purposes (it should never be included in real projects)
+
+Endpoints and ports may differ slightly from the examples, but the same functionality and constraints are fully implemented.

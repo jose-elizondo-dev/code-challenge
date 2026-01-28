@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from app.settings import settings
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
+from decimal import Decimal, ROUND_HALF_UP
 
 app = FastAPI(
     title="FastAPI App",
@@ -48,6 +49,19 @@ class ItemCreate(BaseModel):
             raise ValueError("Name cannot be blank")
         return v.strip()
 
+    @field_validator("price")
+    @classmethod
+    def validate_price(cls, v: float):
+        if v < 0:
+            raise ValueError("Price must be ≥ 0")
+        # Validar máximo 2 decimales
+        decimal_value = Decimal(str(v))
+        if decimal_value.as_tuple().exponent < -2:  # Más de 2 decimales
+            # Redondear a 2 decimales
+            decimal_value = decimal_value.quantize(
+                Decimal('0.01'), rounding=ROUND_HALF_UP)
+        return float(decimal_value)
+
 
 class ItemUpdate(BaseModel):
     name: Optional[str] = None
@@ -61,6 +75,21 @@ class ItemUpdate(BaseModel):
         if v is not None and not v.strip():
             raise ValueError("Name cannot be blank")
         return v.strip() if v else v
+
+    @field_validator("price")
+    @classmethod
+    def validate_price(cls, v):
+        if v is not None:
+            if v < 0:
+                raise ValueError("Price must be ≥ 0")
+            # Validar máximo 2 decimales
+            decimal_value = Decimal(str(v))
+            if decimal_value.as_tuple().exponent < -2:  # Más de 2 decimales
+                # Redondear a 2 decimales
+                decimal_value = decimal_value.quantize(
+                    Decimal('0.01'), rounding=ROUND_HALF_UP)
+            return float(decimal_value)
+        return v
 
 
 class Item(BaseModel):
@@ -170,12 +199,24 @@ def list_menu(
     return PagedItems(page=page, pageSize=pageSize, total=total, items=page_items)
 
 
+@app.get("/api/menu/{item_id}", response_model=Item)
+def get_item(item_id: str, include_deleted: bool = Query(False, description="Include soft-deleted items")):
+    """Get a single menu item by ID"""
+    item = find_item_id(item_id)
+
+    # If not including deleted and item is deleted, return 404
+    if not include_deleted and item.isDeleted:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    return item
+
+
 @app.post("/api/menu", response_model=Item, status_code=201)
 def create_item(payload: ItemCreate, token: str = Depends(get_current_token)):
     constraint = find_item_name(payload.name)
-    if payload.price <= 0:
-        raise HTTPException(
-            status_code=400, detail="Price must be greater than 0")
+    # if payload.price <= 0:
+    #    raise HTTPException(
+    #        status_code=400, detail="Price must be greater than 0")
 
     if constraint:
         raise HTTPException(status_code=409, detail="Name not unique")
@@ -207,9 +248,9 @@ def update_item(item_id: str, payload: ItemUpdate, token: str = Depends(get_curr
 
     data = payload.model_dump(exclude_unset=True)
 
-    if "price" in data and data["price"] <= 0:
-        raise HTTPException(
-            status_code=400, detail="Price must be greater than 0")
+    # if "price" in data and data["price"] <= 0:
+    #    raise HTTPException(
+    #        status_code=400, detail="Price must be greater than 0")
 
     for k, v in data.items():
         setattr(item, k, v)

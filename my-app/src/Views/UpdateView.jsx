@@ -25,7 +25,7 @@ export default function UpdateView({ item, onSave }) {
 
             <button onClick={() => {
                 if (!name.trim()) { alert("Name cannot be empty"); return; }
-                if (!price || Number(price) <= 0) { alert("Price must be greater than 0"); return; }
+                if (!price || Number(price) < 0) { alert("Price must be greater than 0"); return; }
                 onSave({ name, category, price: Number(price), isAvailable })
             }}> Save </button>
         </>

@@ -23,6 +23,11 @@ export async function fetchMenu(params) {
     return res.json();
 }
 
+export async function fetchItem(id) {
+    const res = await fetch(`${BASE_URL}/api/menu/${id}`);
+    if (!res.ok) throw new Error("Failed to fetch item");
+    return res.json();
+}
 
 export async function createItem(data) {
     const res = await fetch(`${BASE_URL}/api/menu`, {
