@@ -32,6 +32,8 @@ pydantic_core==2.41.5
 PyMySQL==1.1.1
 pyparsing==3.2.5
 pytesseract==0.3.13
+pytest
+httpx
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.1
 pytz==2025.2
