@@ -10,13 +10,13 @@ const App = () => {
     <>
       <BrowserRouter>
         <nav style={{ display: "flex", gap: 12, padding: 12 }}>
-          <Link to="/items">List</Link>
+          <Link to="/menu">List</Link>
           <Link to="/create">Create</Link>
         </nav>
 
         <Routes>
           <Route path="/" element={<ListContainer />} />
-          <Route path="/items" element={<ListContainer />} />
+          <Route path="/menu" element={<ListContainer />} />
           <Route path="/create" element={<CreateContainer />} />
           <Route path="/update/:id" element={<UpdateContainer />} />
 

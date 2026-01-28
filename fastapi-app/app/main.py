@@ -170,7 +170,7 @@ def list_menu(
     return PagedItems(page=page, pageSize=pageSize, total=total, items=page_items)
 
 
-@app.post("/api/items", response_model=Item, status_code=201)
+@app.post("/api/menu", response_model=Item, status_code=201)
 def create_item(payload: ItemCreate, token: str = Depends(get_current_token)):
     constraint = find_item_name(payload.name)
     if payload.price <= 0:
@@ -194,7 +194,7 @@ def create_item(payload: ItemCreate, token: str = Depends(get_current_token)):
     return item
 
 
-@app.put("/api/items/{item_id}", response_model=Item)
+@app.patch("/api/menu/{item_id}", response_model=Item)
 def update_item(item_id: str, payload: ItemUpdate, token: str = Depends(get_current_token)):
 
     item = find_item_id(item_id)
@@ -218,7 +218,7 @@ def update_item(item_id: str, payload: ItemUpdate, token: str = Depends(get_curr
     return item
 
 
-@app.delete("/api/items/{item_id}", response_model=Item)
+@app.delete("/api/menu/{item_id}", response_model=Item)
 def delete_item(item_id: str, token: str = Depends(get_current_token)):
 
     item = find_item_id(item_id)

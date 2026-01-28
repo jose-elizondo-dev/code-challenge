@@ -25,7 +25,7 @@ export async function fetchMenu(params) {
 
 
 export async function createItem(data) {
-    const res = await fetch(`${BASE_URL}/api/items`, {
+    const res = await fetch(`${BASE_URL}/api/menu`, {
         method: "POST",
         headers: authHeaders(),
         body: JSON.stringify(data),
@@ -50,8 +50,8 @@ export async function createItem(data) {
 
 
 export async function updateItem(id, data) {
-    const res = await fetch(`${BASE_URL}/api/items/${id}`, {
-        method: "PUT",
+    const res = await fetch(`${BASE_URL}/api/menu/${id}`, {
+        method: "PATCH",
         headers: authHeaders(),
         body: JSON.stringify(data),
     });
@@ -62,7 +62,7 @@ export async function updateItem(id, data) {
 
 
 export async function deleteItem(id) {
-    const res = await fetch(`${BASE_URL}/api/items/${id}`, {
+    const res = await fetch(`${BASE_URL}/api/menu/${id}`, {
         method: "DELETE",
         headers: authHeaders(),
     });
