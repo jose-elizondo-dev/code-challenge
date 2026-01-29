@@ -11,11 +11,19 @@ export default function CreateContainer() {
     });
     const [loading, setLoading] = useState(false);
 
+    /**
+     * Handle form input changes
+     * @param {Event} e - Change event from input element
+     */
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
         setForm({ ...form, [name]: type === "checkbox" ? checked : value });
     };
 
+    /**
+     * Handle form submission
+     * @param {Event} e - Form submit event
+     */
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -38,8 +46,11 @@ export default function CreateContainer() {
         setLoading(true);
 
         try {
+            // Call API to create item
             await createItem({ ...form, price: Number(form.price) });
             alert("Item created");
+
+            // Reset form after successful creation
             setForm({ name: "", category: "main", price: "", isAvailable: true });
 
         } catch (err) {
@@ -59,5 +70,6 @@ export default function CreateContainer() {
         }
     };
 
+    // Render presentational component with props
     return <CreateView form={form} onChange={handleChange} onSubmit={handleSubmit} loading={loading} />;
 }

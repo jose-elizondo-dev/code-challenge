@@ -14,11 +14,23 @@ export default function ListContainer() {
         order: "asc",
     });
 
-
+    /**
+     * Effect hook to fetch data when parameters change
+     * Runs whenever params object changes
+     */
     useEffect(() => {
         fetchMenu(params).then(setData);
     }, [params]);
 
+
+
+    /**
+     * Render ListView component with props
+     * - data: Current menu data
+     * - params: Current filter parameters
+     * - setParams: Function to update parameters
+     * - onDelete: Function to handle item deletion
+     */
 
     return (
         <ListView

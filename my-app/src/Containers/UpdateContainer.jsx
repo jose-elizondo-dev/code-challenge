@@ -9,6 +9,10 @@ export default function UpdateContainer() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+
+    /**
+     * Effect hook to load item data when component mounts or ID changes
+     */
     useEffect(() => {
         async function loadItem() {
             try {
@@ -32,6 +36,11 @@ export default function UpdateContainer() {
     if (error) return <div className="error">Error: {error}</div>;
     if (item === undefined) return <div className="not-found">Item not found</div>;
 
+
+    /**
+    * Handle saving updated item
+    * @param {Object} data - Updated item data
+    */
     const handleSave = async (data) => {
         try {
             await updateItem(id, data);
@@ -43,6 +52,7 @@ export default function UpdateContainer() {
         }
     };
 
+    // Render UpdateView with item data and save handler
     return <UpdateView item={item} onSave={handleSave} />;
 
 

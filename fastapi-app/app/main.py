@@ -1,3 +1,9 @@
+"""
+Menu Management API - FastAPI Backend
+Main application file with all routes, models, and business logic.
+Uses in-memory storage for simplicity in MVP.
+"""
+
 from fastapi import Depends, FastAPI, Header, Query, HTTPException
 from typing import List, Literal, Optional
 from pydantic import BaseModel, Field, field_validator
@@ -13,8 +19,12 @@ app = FastAPI(
     version="0.1.0",
 )
 
+# HTTP Bearer authentication for protected endpoints
 security = HTTPBearer()
 
+
+# CORS configuration to allow requests from frontend development server
+# In production, this should be restricted to specific domains
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
@@ -22,10 +32,10 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=origins,  # Only allow these origins
+    allow_credentials=True,  # Allow cookies if needed
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
 )
 
 
@@ -111,12 +121,20 @@ class PagedItems(BaseModel):
 
 
 # --- DB (in-memory) ---
+# Simple list acting as in-memory database
 items: List[Item] = []
 
 
 def get_current_token(
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
+    """Dependency function to extract and validate Bearer token
+
+    This function is injected into protected endpoints using FastAPI's
+    dependency injection system. It validates the token against the
+    configured API token from settings.
+    """
+
     token = credentials.credentials
 
     if token != settings.api_token:
@@ -137,6 +155,11 @@ def find_item_id(item_id: str) -> Item:
 
 
 def find_item_name(item_name: str) -> Optional[Item]:
+    """Find non-deleted item by name (case-insensitive)
+
+    Used to enforce unique name constraint. Compares normalized
+    (lowercase, trimmed) names to ensure case-insensitive uniqueness.
+    """
     key = item_name.strip().lower()
     for item in items:
         if not item.isDeleted and item.name.strip().lower() == key:
@@ -147,7 +170,7 @@ def find_item_name(item_name: str) -> Optional[Item]:
 
 
 def validate_token(token: str) -> bool:
-    return token == settings.api_token
+    return token == settings.api_tokenA
 
 # --- Routes ---
 
@@ -159,6 +182,11 @@ def home():
 
 @app.get("/api/items", response_model=List[Item])
 def list_items(include_deleted: bool = False):
+    """Get all items (including deleted if specified)
+
+    Simple endpoint for debugging/admin purposes.
+    Not used by the main frontend application.
+    """
     if include_deleted:
         return items
     return [i for i in items if not i.isDeleted]
@@ -174,6 +202,18 @@ def list_menu(
     page: int = Query(1, ge=1),
     pageSize: int = Query(10, ge=1, le=100),
 ):
+    """Main endpoint: Get paginated, filtered, sorted menu items
+
+    Implements complex filtering logic:
+    - Exclude soft-deleted items
+    - Apply category filter if specified
+    - Apply availability filter if specified
+    - Apply text search (case-insensitive substring)
+    - Sort by specified field and order
+    - Apply pagination (offset-based)
+
+    """
+
     # 1) base (exclude deleted)
     filtered = [i for i in items if not i.isDeleted]
     # 2) filters
@@ -201,7 +241,12 @@ def list_menu(
 
 @app.get("/api/menu/{item_id}", response_model=Item)
 def get_item(item_id: str, include_deleted: bool = Query(False, description="Include soft-deleted items")):
-    """Get a single menu item by ID"""
+    """Get single item by ID
+
+    By default, returns 404 if item is soft-deleted.
+    Set include_deleted=true to retrieve soft-deleted items.
+    """
+
     item = find_item_id(item_id)
 
     # If not including deleted and item is deleted, return 404
@@ -213,10 +258,20 @@ def get_item(item_id: str, include_deleted: bool = Query(False, description="Inc
 
 @app.post("/api/menu", response_model=Item, status_code=201)
 def create_item(payload: ItemCreate, token: str = Depends(get_current_token)):
+    """Create new menu item (protected endpoint)
+
+    Business rules enforced:
+    - Name must be unique among non-deleted items (case-insensitive)
+    - Price validation already handled by Pydantic model
+    - Auto-generate UUID, timestamps
+    """
+
+    # Check for name uniqueness constraint
     constraint = find_item_name(payload.name)
 
     if constraint:
         raise HTTPException(status_code=409, detail="Name not unique")
+    # Generate current timestamp
     t = now_iso()
     item = Item(
         id=str(uuid4()),
@@ -228,12 +283,20 @@ def create_item(payload: ItemCreate, token: str = Depends(get_current_token)):
         createdAt=t,
         updatedAt=t,
     )
+
+    # Add to in-memory database
     items.append(item)
+    # Return created item with 201 status code
     return item
 
 
 @app.patch("/api/menu/{item_id}", response_model=Item)
 def update_item(item_id: str, payload: ItemUpdate, token: str = Depends(get_current_token)):
+    """Update existing item (partial update, protected endpoint)
+
+    Uses PATCH semantics: only provided fields are updated.
+    model_dump(exclude_unset=True) ensures only provided fields are included.
+    """
 
     item = find_item_id(item_id)
 
@@ -254,13 +317,21 @@ def update_item(item_id: str, payload: ItemUpdate, token: str = Depends(get_curr
 
 @app.delete("/api/menu/{item_id}", response_model=Item)
 def delete_item(item_id: str, token: str = Depends(get_current_token)):
+    """Soft delete menu item (protected endpoint)
+
+    Instead of removing from database, we:
+    - Set isDeleted = True
+    - Set isAvailable = False (consistency)
+    - Update timestamp
+    Item will be excluded from all listings.
+    """
 
     item = find_item_id(item_id)
 
     if not item:
         raise HTTPException(status_code=404, detail="Not Found")
 
-    # soft delete
+    # Soft delete implementation
     item.isDeleted = True
     item.isAvailable = False
     item.updatedAt = now_iso()
